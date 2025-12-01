@@ -12,8 +12,7 @@ Based on this URL, the service implements the following endpoints:
 - `/players` &mdash; the full list of players
 - `/players/:id` &mdash; the single player with the given ID (e.g., `/players/1`)
 - `/games` &mdash; the full list of games
-- GET /games/:id &mdash; the name and score for every player who played in the specified game. (e.g., /games/2)
-- DELETE /games/:id &mdash; delete a specific game (/games/2)
+- `/games/:id` &mdash; the name and score for every player who played in the specified game. (e.g., /games/2)
 
 Also, it gives the following responses:
 

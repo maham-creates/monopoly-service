@@ -44,7 +44,7 @@ import pgPromise from 'pg-promise';
 
 // Import types for compile-time checking.
 import type { Request, Response, NextFunction } from 'express';
-import type { Player, PlayerInput } from './player.js';
+import type { Player, PlayerInput } from './player';
 
 // Set up the database
 const db = pgPromise()({
@@ -243,8 +243,8 @@ function readGames(_request: Request, response: Response, next: NextFunction): v
 function readGamePlayers(request: Request, response: Response, next: NextFunction): void {
     db.any(
         'SELECT Player.name, PlayerGame.score \
-         FROM PlayerGame \
-         JOIN Player ON PlayerGame.playerId = Player.id \
+         FROM Player, PlayerGame \
+         JOIN Player ON PlayerGame.playerID = Player.ID \
          WHERE PlayerGame.gameID = ${id}',
         {id: request.params.id} // The second argument { id: request.params.id } provides the binding.
     )
@@ -269,4 +269,40 @@ function deleteGame(request: Request, response: Response, next: NextFunction): v
         .catch((error: Error): void => {
             next(error);
         });
-}
+} 
+
+/**function deleteGame(request: Request, response: Response, next: NextFunction): void {
+  console.log('=== DELETE GAME START ===');
+  console.log('Game ID:', request.params.id);
+  
+  db.tx((t) => {
+    console.log('Step 1: Deleting from playerproperty');
+    return t.none('DELETE FROM playerproperty WHERE gameid=${id}', request.params)
+      .then(() => {
+        console.log('Step 2: Deleting from playerstate');
+        return t.none('DELETE FROM playerstate WHERE gameid=${id}', request.params);
+      })
+      .then(() => {
+        console.log('Step 3: Deleting from playergame');
+        return t.none('DELETE FROM playergame WHERE gameid=${id}', request.params);
+      })
+      .then(() => {
+        console.log('Step 4: Deleting from game');
+        return t.oneOrNone('DELETE FROM game WHERE id=${id} RETURNING id', request.params);
+      });
+  })
+  .then((data) => {
+    console.log('=== DELETE SUCCESS ===', data);
+    returnDataOr404(response, data);
+  })
+  .catch((error) => {
+    console.error('=== DELETE FAILED ===');
+    console.error('Error message:', error.message);
+    console.error('Error code:', (error as any).code);
+    next(error);
+  });
+}*/
+
+// ...existing/ */
+
+
