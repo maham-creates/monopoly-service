@@ -244,7 +244,7 @@ function readGamePlayers(request: Request, response: Response, next: NextFunctio
     db.any(
         'SELECT Player.name, PlayerGame.score \
          FROM PlayerGame \
-         JOIN Player ON PlayerGame.playerId = Player.id \
+         JOIN Player ON PlayerGame.playerid = Player.id \
          WHERE PlayerGame.gameID = ${id}',
         {id: request.params.id} // The second argument { id: request.params.id } provides the binding.
     )
@@ -256,7 +256,7 @@ function readGamePlayers(request: Request, response: Response, next: NextFunctio
     });
 }
 
-function deleteGame(request: Request, response: Response, next: NextFunction): void {
+/**function deleteGame(request: Request, response: Response, next: NextFunction): void {
     db.tx((t) => {
         return t.none('DELETE FROM PlayerGame WHERE gameID=${id}', request.params)
             .then(() => {
@@ -267,6 +267,35 @@ function deleteGame(request: Request, response: Response, next: NextFunction): v
             returnDataOr404(response, data);
         })
         .catch((error: Error): void => {
+            next(error);
+        });
+}*/
+
+function deleteGame(request: Request, response: Response, next: NextFunction): void {
+    console.log('Deleting game:', request.params.id);
+    
+    db.tx((t) => {
+        // Delete from ALL child tables first (in lowercase)
+        return t.none('DELETE FROM playerproperty WHERE gameid=${id}', request.params)
+            .then(() => {
+                console.log('playerproperty deleted');
+                return t.none('DELETE FROM playerstate WHERE gameid=${id}', request.params);
+            })
+            .then(() => {
+                console.log('playerstate deleted');
+                return t.none('DELETE FROM playergame WHERE gameid=${id}', request.params);
+            })
+            .then(() => {
+                console.log('playergame deleted');
+                return t.oneOrNone('DELETE FROM game WHERE id=${id} RETURNING id', request.params);
+            });
+    })
+        .then((data: { id: number } | null): void => {
+            console.log('Game deleted successfully');
+            returnDataOr404(response, data);
+        })
+        .catch((error: Error): void => {
+            console.error('deleteGame error:', error.message);
             next(error);
         });
 }
